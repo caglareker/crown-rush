@@ -6,7 +6,8 @@
 <title>Crown Rush</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{min-height:100%}
+html,body{min-height:100%;touch-action:manipulation}
+.lvl{display:none!important}
 body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;background:linear-gradient(180deg,#141224,#251a40);background-attachment:fixed;color:#fff;overscroll-behavior:none}
 .screen{max-width:520px;margin:0 auto;padding:18px 16px 28px;display:none}
 .screen.active{display:block}
@@ -225,7 +226,17 @@ const XS = cls => `<svg class="${cls}" viewBox="0 0 10 10"><path d="M1.5 1.5L8.5
 const $ = id => document.getElementById(id);
 const vib = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch(e){} };
 const sizeFor = (d, k) => Math.min(DIFFS[d].max, DIFFS[d].start + Math.floor(k / DIFFS[d].step));
-const sizeLabel = d => `${DIFFS[d].start}×${DIFFS[d].start} → ${DIFFS[d].max}×${DIFFS[d].max}`;
+const sizeLabel = d => `Başlangıç ${DIFFS[d].start}×${DIFFS[d].start}`;
+// Çift dokunuşta / iki parmakla yakınlaştırmayı engelle
+document.addEventListener('dblclick', e => e.preventDefault(), {passive:false});
+document.addEventListener('gesturestart', e => e.preventDefault(), {passive:false});
+$('board').addEventListener('touchend', e => e.preventDefault(), {passive:false});
+let lastTouchEnd = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if (now - lastTouchEnd < 350) e.preventDefault();
+  lastTouchEnd = now;
+}, {passive:false});
 $('heroCrown').innerHTML = CROWN_PATH;
 $('scoreCrown').innerHTML = CROWN_PATH;
 
@@ -364,7 +375,7 @@ function renderHome(){
   }).join('');
   document.querySelectorAll('.diff').forEach(b=>b.onclick=()=>{ diff=b.dataset.d; vib(5); renderHome(); });
   const D=DIFFS[diff];
-  $('info').textContent=`${D.start}×${D.start} ile başlar, her ${D.step===1?'':D.step+' '}çözümde büyür · +${D.bonus}s`;
+  $('info').textContent=`${D.start}×${D.start} tahtayla başlar, her ${D.step===1?'':D.step+' '}çözümde büyür (en fazla ${D.max}×${D.max}) · +${D.bonus}s`;
   const sb=$('startBtn');
   sb.textContent = life.lives>0 ? `${D.t} Koşuyu Başlat (−1 ❤)` : 'Can Kalmadı – Can Kazan';
   sb.classList.toggle('dim', life.lives<=0);
